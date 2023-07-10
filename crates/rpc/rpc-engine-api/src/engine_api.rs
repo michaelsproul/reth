@@ -515,11 +515,30 @@ mod tests {
                 random_block_range(&mut rng, start..=start + count - 1, H256::default(), 0..2);
             handle.provider.extend_blocks(blocks.iter().cloned().map(|b| (b.hash(), b.unseal())));
 
-            let expected =
-                blocks.iter().cloned().map(|b| Some(b.unseal().into())).collect::<Vec<_>>();
+            // Roundtrip via `ExecutionPayload` to check encoding correctness. This is a regression
+            // test against incorrect encoding implemented on `ExecutionPayloadBody`.
+            let mut transactions_exist = false;
+            let expected = blocks
+                .iter()
+                .cloned()
+                .map(|b| {
+                    let payload = ExecutionPayload::from(b);
+                    (payload.transactions, payload.withdrawals.unwrap_or_default())
+                })
+                .collect::<Vec<_>>();
 
-            let res = api.get_payload_bodies_by_range(start, count).unwrap();
+            let res = api
+                .get_payload_bodies_by_range(start, count)
+                .unwrap()
+                .into_iter()
+                .map(|opt_body| {
+                    let body = opt_body.unwrap();
+                    transactions_exist |= !body.transactions.is_empty();
+                    (body.transactions, body.withdrawals)
+                })
+                .collect::<Vec<_>>();
             assert_eq!(res, expected);
+            assert!(transactions_exist);
         }
 
         #[tokio::test]
