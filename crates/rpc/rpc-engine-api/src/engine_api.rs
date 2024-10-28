@@ -29,7 +29,7 @@ use reth_tasks::TaskSpawner;
 use reth_transaction_pool::TransactionPool;
 use std::{sync::Arc, time::Instant};
 use tokio::sync::oneshot;
-use tracing::{trace, warn};
+use tracing::{info, trace, warn};
 
 /// The Engine API response sender.
 pub type EngineApiSender<Ok> = oneshot::Sender<EngineApiResult<Ok>>;
@@ -919,7 +919,7 @@ where
         &self,
         versioned_hashes: Vec<B256>,
     ) -> RpcResult<Vec<Option<BlobAndProofV1>>> {
-        trace!(target: "rpc::engine", "Serving engine_getBlobsV1");
+        info!(target: "rpc::engine", "Serving engine_getBlobsV1");
         if versioned_hashes.len() > MAX_BLOB_LIMIT {
             return Err(EngineApiError::BlobRequestTooLarge { len: versioned_hashes.len() }.into())
         }

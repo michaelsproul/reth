@@ -132,6 +132,13 @@ impl BlobStore for DiskFileBlobStore {
         &self,
         versioned_hashes: &[B256],
     ) -> Result<Vec<Option<BlobAndProofV1>>, BlobStoreError> {
+        let cache_len = self.inner.blob_cache.lock().len();
+        debug!(
+            target: "blobstore::disk",
+            cache_len = cache_len,
+            "Disk impl of get_by_versioned_hashes"
+        );
+
         let mut result = vec![None; versioned_hashes.len()];
         for (_tx_hash, blob_sidecar) in self.inner.blob_cache.lock().iter() {
             for (i, blob_versioned_hash) in blob_sidecar.versioned_hashes().enumerate() {

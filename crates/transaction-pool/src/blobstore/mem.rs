@@ -102,6 +102,12 @@ impl BlobStore for InMemoryBlobStore {
         &self,
         versioned_hashes: &[B256],
     ) -> Result<Vec<Option<BlobAndProofV1>>, BlobStoreError> {
+        let cache_len = self.inner.store.read().len();
+        tracing::debug!(
+            target: "blobstore::mem",
+            cache_len = cache_len,
+            "Memory impl of get_by_versioned_hashes"
+        );
         let mut result = vec![None; versioned_hashes.len()];
         for (_tx_hash, blob_sidecar) in self.inner.store.read().iter() {
             for (i, blob_versioned_hash) in blob_sidecar.versioned_hashes().enumerate() {
